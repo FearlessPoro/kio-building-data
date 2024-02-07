@@ -31,7 +31,9 @@ public class BuildingService {
                 .uri("locations/buildings/{buildingId}", buildingId)
                 .retrieve()
                 .bodyToMono(JsonNode.class)
-                .map(this::mapToBuilding);
+                .filter(jsonNode -> jsonNode != null && jsonNode.get("id") != null)
+                .map(this::mapToBuilding)
+                .switchIfEmpty(Mono.empty());
     }
 
     private Building mapToBuilding(JsonNode jsonNode) {

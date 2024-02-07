@@ -8,6 +8,7 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PathVariable;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
@@ -26,17 +27,19 @@ public class BuildingController {
     }
 
     @GetMapping("/{buildingId}")
-    public Mono<ResponseEntity<Building>> getBuildingById(final Long buildingId) {
+    public Mono<ResponseEntity<Building>> getBuildingById(@PathVariable final Long buildingId) {
         LOGGER.info("Getting building with id: {}", buildingId);
-        return buildingService.getBuildingData(buildingId)
-                .map(building -> {
-                    LOGGER.info("Building information retrieved: {}", building);
-                    return ResponseEntity.ok(building);
-                })
-                .onErrorResume(e -> {
-                    LOGGER.error("Error retrieving building with id: {}", buildingId, e);
-                    return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
-                });
+        return Mono.fromCallable(() -> buildingService.getBuildingData(buildingId))
+                .flatMap(buildingMono -> buildingMono
+                        .map(building -> {
+                            LOGGER.info("Building information retrieved: {}", building);
+                            return ResponseEntity.ok(building);
+                        })
+                        .switchIfEmpty(Mono.just(ResponseEntity.notFound().build()))
+                        .onErrorResume(e -> {
+                            LOGGER.error("Error retrieving building with id: {}", buildingId, e);
+                            return Mono.just(ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).build());
+                        }));
     }
 
 

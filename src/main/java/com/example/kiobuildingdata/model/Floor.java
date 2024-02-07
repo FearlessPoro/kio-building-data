@@ -18,7 +18,7 @@ public class Floor {
     private Integer level;
 
     @Lob
-    private String floorPlan;
+    private String imageXyGeojson;
 
     @ElementCollection
     private List<String> properties;

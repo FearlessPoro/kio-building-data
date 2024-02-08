@@ -13,6 +13,8 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 import reactor.core.publisher.Mono;
 
+import java.util.Objects;
+
 @RestController
 @RequestMapping("/building")
 public class BuildingController {
@@ -31,6 +33,7 @@ public class BuildingController {
         LOGGER.info("Getting building with id: {}", buildingId);
         return Mono.fromCallable(() -> buildingService.getBuildingData(buildingId))
                 .flatMap(buildingMono -> buildingMono
+                        .filter(Objects::nonNull)
                         .map(building -> {
                             LOGGER.info("Building information retrieved: {}", building);
                             return ResponseEntity.ok(building);
